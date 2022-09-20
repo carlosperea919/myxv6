@@ -5,6 +5,7 @@
 #include "spinlock.h"
 #include "proc.h"
 #include "defs.h"
+#include "user/uproc.h"
 
 struct cpu cpus[NCPU];
 
@@ -653,4 +654,42 @@ procdump(void)
     printf("%d %s %s", p->pid, state, p->name);
     printf("\n");
   }
+}
+
+void
+procinfo(struct uproc *up, uint64 addr)
+{
+	
+	struct proc *p;
+
+	for(p = proc; p < &proc[NPROC]; p++){
+		if(p->state == UNUSED)
+			continue;
+		up->pid = p->pid;
+		switch(p->state) {
+			case UNUSED:
+				up->state = UUNUSED;
+				break;
+			case USED:
+				up->state = UUSED;
+				break;
+			case SLEEPING:
+				up->state = USLEEPING;
+				break;
+			case RUNNABLE:
+				up->state = URUNNABLE;
+				break;
+			case RUNNING:
+				up->state = URUNNING;
+				break;
+			case ZOMBIE:
+				up->state = UZOMBIE;
+				break;
+		}
+		up->size = p->sz;
+		if (p->parent)
+			up->ppid = p->parent->pid;
+		strncpy(up->name, p->name, 16);
+		copyout(p->pagetable, addr, (char *)&up, sizeof(up));
+	}
 }

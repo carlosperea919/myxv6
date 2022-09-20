@@ -95,3 +95,12 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+uint64
+sys_getprocs(struct uproc* p) {
+	uint64 st; // user pointer to struct stat
+
+	procinfo(p, st);
+	return 0;
+	
+}
