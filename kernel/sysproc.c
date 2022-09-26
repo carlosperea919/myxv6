@@ -97,10 +97,12 @@ sys_uptime(void)
 }
 
 uint64
-sys_getprocs(struct uproc* p) {
-	uint64 st; // user pointer to struct stat
+sys_getprocs(void) {
+	uint64 st; // user pointer to struct uproc
 
-	procinfo(p, st);
-	return 0;
+	if (argaddr(0, &st) < 0)
+		return -1;
+		
+	return procinfo(st);
 	
 }

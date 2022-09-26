@@ -1,34 +1,27 @@
 #include "kernel/types.h"
-#include "kernel/stat.h"
 #include "user/user.h"
-#include "user/uproc.h"
 #include "kernel/param.h"
+#include "kernel/uproc.h"
 
 int main(int argc, char **argv) {
-	struct uproc *p = malloc(NPROC * sizeof *p);
-	getprocs(p);
+	struct uproc up[NPROC];
+	int nprocs = getprocs(up);
 	
-	/*tatic char *states[] = {
-  [UUNUSED]    "unused",
-  [USLEEPING]  "sleep ",
-  [URUNNABLE]  "runble",
-  [URUNNING]   "run   ",
-  [UZOMBIE]    "zombie"
-  };*/
-  //char *state;
+	static char *states[] = {
+	[SLEEPING]  "sleeping",
+	[RUNNABLE]  "runnable",
+	[RUNNING]   "running ",
+	[ZOMBIE]    "zombie  "
+	};
+	char *state;
 	
-  printf("\n");
-  //for(p = proc; p < &proc[NPROC]; p++){
-    //if(p->state == UNUSED)
-      //continue;
-    //if(p->state >= 0 && p->state < NELEM(states) && states[p->state])
-      //state = states[p->state];
-    //else
-      //state = "???";
-    //printf("%d %s %s", p->pid, state, p->name);
-    printf("%d", p->name);
-    printf("\n");
-  //}*/
-  exit(1);
+	if (nprocs < 0)
+		exit(-1);
+	printf("pid\tstate\t\tsize\tppid\tname\n");
+	for(int i = 0; i < nprocs; i++){
+		state = states[up[i].state];
+		printf("%d\t%s\t%l\t%d\t%s\n", up[i].pid, state, up[i].size, up[i].ppid, up[i].name);
+	}
+	exit(0);
 	
 }

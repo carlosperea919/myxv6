@@ -4,8 +4,8 @@
 #include "riscv.h"
 #include "spinlock.h"
 #include "proc.h"
+#include "uproc.h"
 #include "defs.h"
-#include "user/uproc.h"
 
 struct cpu cpus[NCPU];
 
@@ -656,40 +656,28 @@ procdump(void)
   }
 }
 
-void
-procinfo(struct uproc *up, uint64 addr)
+int
+procinfo(uint64 addr)
 {
 	
 	struct proc *p;
-
+	struct proc *thisproc = myproc();
+	struct uproc up;
+	int nprocs = 0;
 	for(p = proc; p < &proc[NPROC]; p++){
 		if(p->state == UNUSED)
 			continue;
-		up->pid = p->pid;
-		switch(p->state) {
-			case UNUSED:
-				up->state = UUNUSED;
-				break;
-			case USED:
-				up->state = UUSED;
-				break;
-			case SLEEPING:
-				up->state = USLEEPING;
-				break;
-			case RUNNABLE:
-				up->state = URUNNABLE;
-				break;
-			case RUNNING:
-				up->state = URUNNING;
-				break;
-			case ZOMBIE:
-				up->state = UZOMBIE;
-				break;
-		}
-		up->size = p->sz;
+		nprocs++;
+		up.pid = p->pid;
+		up.state = p->state;
+		up.size = p->sz;
 		if (p->parent)
-			up->ppid = p->parent->pid;
-		strncpy(up->name, p->name, 16);
-		copyout(p->pagetable, addr, (char *)&up, sizeof(up));
+			up.ppid = p->parent->pid;
+		strncpy(up.name, p->name, 16);
+		if (copyout(thisproc->pagetable, addr, (char *)&up, sizeof(up)) < 0)
+			return -1;
+		
+		addr += sizeof(up);
 	}
+	return nprocs;
 }
