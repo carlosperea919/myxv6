@@ -4,7 +4,7 @@
 #include "riscv.h"
 #include "spinlock.h"
 #include "proc.h"
-#include "uproc.h"
+#include "pstat.h"
 #include "defs.h"
 
 struct cpu cpus[NCPU];
@@ -103,8 +103,7 @@ allocpid() {
 // and return with p->lock held.
 // If there are no free procs, or a memory allocation fails, return 0.
 static struct proc*
-allocproc(void)
-{
+allocproc(void) {
   struct proc *p;
 
   for(p = proc; p < &proc[NPROC]; p++) {
@@ -120,6 +119,7 @@ allocproc(void)
 found:
   p->pid = allocpid();
   p->state = USED;
+  p->cputime = 0;
 
   // Allocate a trapframe page.
   if((p->trapframe = (struct trapframe *)kalloc()) == 0){
@@ -662,7 +662,7 @@ procinfo(uint64 addr)
 	
 	struct proc *p;
 	struct proc *thisproc = myproc();
-	struct uproc up;
+	struct pstat up;
 	int nprocs = 0;
 	for(p = proc; p < &proc[NPROC]; p++){
 		if(p->state == UNUSED)
@@ -671,6 +671,8 @@ procinfo(uint64 addr)
 		up.pid = p->pid;
 		up.state = p->state;
 		up.size = p->sz;
+		up.cputime = p->cputime;
+		up.arrtime = p->arrtime;
 		if (p->parent)
 			up.ppid = p->parent->pid;
 		strncpy(up.name, p->name, 16);
@@ -680,4 +682,57 @@ procinfo(uint64 addr)
 		addr += sizeof(up);
 	}
 	return nprocs;
+}
+
+// Wait for a child process to exit and return its pid.
+// Return -1 if this process has no children.
+int
+wait2(uint64 addr, uint64 ru_addr)
+{
+  struct proc *np;
+  int havekids, pid;
+  struct proc *p = myproc();
+  struct rusage nru;
+
+  acquire(&wait_lock);
+
+  for(;;){
+    // Scan through table looking for exited children.
+    havekids = 0;
+    for(np = proc; np < &proc[NPROC]; np++){
+      if(np->parent == p){
+        // make sure the child isn't still in exit() or swtch().
+        acquire(&np->lock);
+
+        havekids = 1;
+        if(np->state == ZOMBIE){
+          // Found one.
+          pid = np->pid;
+          nru.cputime = np->cputime;
+          if (copyout(p->pagetable, ru_addr, (char *)&nru, sizeof(nru)) < 0 )
+          	return -1;
+          if(addr != 0 && copyout(p->pagetable, addr, (char *)&np->xstate,
+                                  sizeof(np->xstate)) < 0) {
+            release(&np->lock);
+            release(&wait_lock);
+            return -1;
+          }
+          freeproc(np);
+          release(&np->lock);
+          release(&wait_lock);
+          return pid;
+        }
+        release(&np->lock);
+      }
+    }
+
+    // No point waiting if we don't have any children.
+    if(!havekids || p->killed){
+      release(&wait_lock);
+      return -1;
+    }
+    
+    // Wait for a child to exit.
+    sleep(p, &wait_lock);  //DOC: wait-sleep
+  }
 }

@@ -106,3 +106,12 @@ sys_getprocs(void) {
 	return procinfo(st);
 	
 }
+
+uint64
+sys_wait2(void)
+{
+  uint64 p, ru;
+  if(argaddr(0, &p) < 0 || argaddr(1, &ru) < 0)
+    return -1;
+  return wait2(p, ru);
+}

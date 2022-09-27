@@ -1,9 +1,9 @@
 #include "kernel/param.h"
 #include "kernel/types.h"
-#include "kernel/uproc.h"
+#include "kernel/pstat.h"
 #include "user/user.h"
 
-struct uproc up[NPROC];
+struct pstat up[NPROC];
 int nprocs;
 
 void mktree(int indent, int pid) {
