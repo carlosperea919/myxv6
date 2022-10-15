@@ -106,6 +106,9 @@ int             either_copyin(void *dst, int user_src, uint64 src, uint64 len);
 void            procdump(void);
 int		procinfo(uint64);
 int		wait2(uint64, uint64);
+void		queueinit(void);
+int		timeslice(int);
+int		queue_empty(int);
 
 // swtch.S
 void            swtch(struct context*, struct context*);

@@ -78,8 +78,13 @@ usertrap(void)
 
   // give up the CPU if this is a timer interrupt.
   if(which_dev == 2) {
-    yield();
+    if (p->tsticks >= timeslice(p->priority)) {
+    	if(p->priority != LOW && p->tsticks >= timeslice(p->priority))
+	    p->priority = p->priority+1;
+    	yield();
+    }
     p->cputime++;
+    p->tsticks++;
   }
 
   usertrapret();
@@ -150,11 +155,15 @@ kerneltrap()
     printf("sepc=%p stval=%p\n", r_sepc(), r_stval());
     panic("kerneltrap");
   }
-
   // give up the CPU if this is a timer interrupt.
   if(which_dev == 2 && myproc() != 0 && myproc()->state == RUNNING) {
-    yield();
+    if (myproc()->tsticks >= timeslice(myproc()->priority)) {
+      if(myproc()->priority != LOW && myproc()->tsticks >= timeslice(myproc()->priority))
+	    myproc()->priority = myproc()->priority+1;
+      yield();
+    }
     myproc()->cputime++;
+    myproc()->tsticks++;
   }
 
   // the yield() may have caused some traps to occur,

@@ -11,5 +11,14 @@
 #define NBUF         (MAXOPBLOCKS*3)  // size of disk block cache
 #define FSSIZE       1000  // size of file system in blocks
 #define MAXPATH      128   // maximum file path name
+#define TSTICKSHIGH   2  // ticks per time slice for HIGH queue
+#define TSTICKSMEDIUM 20  // ticks per time slice for MEDIUM queue
+#define TSTICKSLOW   50  // ticks per time slice for LOW queue
+#define NQUEUE        3  // Number of queues for MLFQ scheduler
+#define HIGH          0  // High priority for scheduling
+#define MEDIUM        1
+#define LOW           2
+#define MLFQ          1  // 0 for RR, 1 for MLFQ
+#define RR            0
 
 enum procstate { UNUSED, USED, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };

@@ -93,6 +93,10 @@ struct proc {
   uint arrtime;			// Arrival time (in ticks)
   uint cputime;			// Amoutn of CPU time accumulated (in ticks)
   uint tsticks;			// Ticks accumulated in current time slice
+  int priority;			// Scheduling priority (0 to NQUEUE-1)
+  uint timeslice;		// scheduling timeslice
+  int yielded;			// 1 if this process yielded to a higher priority process before using its timeslice
+  struct proc *next;		// next process in scheduler queue
 
   // wait_lock must be held when using this:
   struct proc *parent;         // Parent process
@@ -106,4 +110,11 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
+};
+
+struct queue {
+  struct spinlock lock;
+  uint timeslice;
+  struct proc *head;
+  struct proc *tail;
 };

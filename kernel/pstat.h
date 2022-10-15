@@ -5,6 +5,7 @@ struct pstat {
 	uint arrtime;
 	uint cputime;
 	int ppid;
+	int priority;
 	char name[16];
 };
 

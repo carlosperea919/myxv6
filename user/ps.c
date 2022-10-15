@@ -7,6 +7,7 @@ int main(int argc, char **argv) {
 	struct pstat up[NPROC];
 	int nprocs = getprocs(up);
 	
+	
 	static char *states[] = {
 	[SLEEPING]  "sleeping",
 	[RUNNABLE]  "runnable",
@@ -17,10 +18,10 @@ int main(int argc, char **argv) {
 	
 	if (nprocs < 0)
 		exit(-1);
-	printf("pid\tstate\t\tsize\tppid\tname\tcputime\n");
+	printf("pid\tstate\tpriority\tsize\tppid\tname\tcputime\n");
 	for(int i = 0; i < nprocs; i++){
 		state = states[up[i].state];
-		printf("%d\t%s\t%l\t%d\t%s\t%d\n", up[i].pid, state, up[i].size, up[i].ppid, up[i].name, up[i].cputime);
+		printf("%d\t%s\t%d\t%l\t%d\t%s\t%d\n", up[i].pid, state, up[i].priority, up[i].size, up[i].ppid, up[i].name, up[i].cputime);
 	}
 	exit(0);
 	
