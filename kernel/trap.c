@@ -65,6 +65,83 @@ usertrap(void)
     intr_on();
 
     syscall();
+  } else if (r_scause() == 13 || r_scause() == 15) {
+    uint64 faultAddress = r_stval();
+    for (int i = 0; i < MAX_MMR; i++) {
+      if (p->mmr[i].valid == 1 && faultAddress >= p->mmr[i].addr && faultAddress < p->mmr[i].addr+p->mmr[i].length) {
+        struct mmr* FoundMMR = &(p->mmr[i]);
+        if (r_scause() == 13 && (FoundMMR->prot & PTE_R)) {
+          struct mmr_list* mmrl = get_mmr_list(FoundMMR->mmr_family.listid);
+          if (mmrl != 0) {
+      	  acquire(&mmrl->lock);
+      	  struct mmr_node* tempNode = &FoundMMR->mmr_family;
+      	  
+      	  if (mmrl->valid == 1 && &FoundMMR->mmr_family) {
+      	    do {
+      	      struct proc* lp = tempNode->proc;
+              char* pa = kalloc();
+              if (pa) {
+                uint64 va = PGROUNDDOWN(faultAddress);
+                memset(pa, 0, PGSIZE);
+                if (mappages(lp->pagetable, va, PGSIZE, (uint64) pa, FoundMMR->flags)) {
+                  kfree(pa);
+                  lp->killed = 1;
+                }
+              }
+              tempNode = tempNode->next;
+            } while (tempNode != &FoundMMR->mmr_family);
+          }
+          release(&mmrl->lock);
+          } else {
+            char* pa = kalloc();
+            if (pa) {
+              uint64 va = PGROUNDDOWN(faultAddress);
+              memset(pa, 0, PGSIZE);
+              if (mappages(p->pagetable, va, PGSIZE, (uint64) pa, FoundMMR->flags)) {
+                kfree(pa);
+                p->killed = 1;
+              }
+            }
+          }
+        }
+        if (r_scause() == 15 && (FoundMMR->prot & PTE_W)) {
+          struct mmr_list* mmrl = get_mmr_list(FoundMMR->mmr_family.listid);
+          if (mmrl != 0) {
+      	  acquire(&mmrl->lock);
+      	  struct mmr_node* tempNode = &FoundMMR->mmr_family;
+      	  
+      	  if (mmrl->valid == 1 && &FoundMMR->mmr_family) {
+      	    do {
+      	      struct proc* lp = tempNode->proc;
+              char* pa = kalloc();
+              if (pa) {
+                uint64 va = PGROUNDDOWN(faultAddress);
+                memset(pa, 0, PGSIZE);
+                if (mappages(lp->pagetable, va, PGSIZE, (uint64) pa, FoundMMR->flags)) {
+                  kfree(pa);
+                  lp->killed = 1;
+                }
+              }
+              tempNode = tempNode->next;
+            } while (tempNode != &FoundMMR->mmr_family);
+          }
+          release(&mmrl->lock);
+          } else {
+            char* pa = kalloc();
+            if (pa) {
+              uint64 va = PGROUNDDOWN(faultAddress);
+              memset(pa, 0, PGSIZE);
+              if (mappages(p->pagetable, va, PGSIZE, (uint64) pa, FoundMMR->flags)) {
+                kfree(pa);
+                p->killed = 1;
+              }
+            }
+          }
+        }
+        break;
+      }
+    }
+    
   } else if((which_dev = devintr()) != 0){
     // ok
   } else {

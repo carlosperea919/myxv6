@@ -136,6 +136,11 @@ UPROGS=\
 	$U/_ps\
 	$U/_pstree\
 	$U/_pstest\
+	$U/_free\
+	$U/_private\
+	$U/_prodcons1\
+	$U/_prodcons2\
+	$U/_prodcons3\
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)
