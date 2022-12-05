@@ -28,6 +28,10 @@ int getprocs(struct uproc*);
 int freepmem(void);
 int mmap();
 int munmap(int, int);
+int sem_init(sem_t*, int, unsigned int);
+int sem_detroy(sem_t*);
+int sem_wait(sem_t*);
+int sem_post(sem_t*);
 
 // sysfile.c
 //int munmap_helper(int, int);
