@@ -101,6 +101,17 @@ filestat(struct file *f, uint64 addr)
   return -1;
 }
 
+int
+newfilestat(struct file *f, uint64 addr)
+{
+  struct proc *p = myproc();
+  struct stat st;
+  
+  printf("test");
+  return -1;
+}
+
+
 // Read from file f.
 // addr is a user virtual address.
 int
