@@ -109,5 +109,5 @@ sys_getprocs(void) {
 
 uint64
 sys_freepmem(void) {
-  return kfreepagecount();
+  return kfreepagecount()*PGSIZE;
 }
